@@ -1,0 +1,65 @@
+years: 100
+species:
+  - name: kangaroo 
+    attributes:
+      monthly_food_consumption: 3 #arbitrary unit
+      monthly_water_consumption: 4 #arbitrary unit
+      life_span: 30 #years 
+      minimum_temperature: 30 #F
+      maximum_temperature: 110 #F
+  - name: bear
+    attributes:
+      monthly_food_consumption: 4
+      monthly_water_consumption: 4
+      life_span: 50
+      minimum_temperature: 0
+      maximum_temperature: 95
+habitats:
+    - name: plains
+      monthly_food: 100 #arbitrary unit
+      monthly_water: 150 #arbitrary unit
+      average_temperature:
+        summer: 85 #F
+        spring: 60 #F
+        fall: 50 #F
+        winter: 30 #F
+    - name: forest
+      monthly_food: 75
+      monthly_water: 130
+      average_temperature:
+        summer: 85
+        spring: 60
+        fall: 50
+        winter: 30
+    - name: desert
+      monthly_food: 50
+      monthly_water: 30
+      average_temperature:
+        summer: 100
+        spring: 60
+        fall: 50
+        winter: 30
+    - name: oasis
+      monthly_food: 250
+      monthly_water: 350
+      average_temperature:
+        summer: 95
+        spring: 60
+        fall: 50
+        winter: 30
+    - name: hills
+      monthly_food: 100
+      monthly_water: 130
+      average_temperature:
+        summer: 85
+        spring: 60
+        fall: 50
+        winter: 30
+    - name: mountains
+      monthly_food: 80
+      monthly_water: 100
+      average_temperature:
+        summer: 75
+        spring: 60
+        fall: 50
+        winter: 20
