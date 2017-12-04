@@ -328,7 +328,13 @@ def main():
 
 
 def generate_simulation_report(simulation_steps, output_stream):
-    deaths_by_type = defaultdict(list)
+    deaths_by_type = {
+        DEATH_OLD_AGE: [],
+        DEATH_THIRST: [],
+        DEATH_STARVATION: [],
+        DEATH_TOO_HOT: [],
+        DEATH_TOO_COLD: [],
+    }
     for simulation_step in simulation_steps:
         for death_reason, animals in simulation_step.deaths.items():
             deaths_by_type[death_reason] += animals
