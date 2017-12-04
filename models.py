@@ -136,8 +136,11 @@ class CounterCheck(StepCheck):
 class ConsecutiveConditionCheck(StepCheck):
 
     def update(self, animal):
-        value = getattr(animal, self.counter_field)
-        setattr(animal, self.counter_field, value + 1)
+        if self.should_increment():
+            value = getattr(animal, self.counter_field)
+            setattr(animal, self.counter_field, value + 1)
+        else:
+            setattr(animal, self.counter_field, 0)
 
     def should_increment(self):
         return True
