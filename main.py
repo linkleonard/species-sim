@@ -1,9 +1,15 @@
 from argparse import ArgumentParser
 import os.path
 import yaml
-from models import GENDER_MALE, GENDER_FEMALE, SimulationStep, Animal
+from models import (
+    DEATH_OLD_AGE,
+    GENDER_MALE,
+    GENDER_FEMALE,
+    SimulationStep,
+    Animal,
+)
 from random import random
-from itertools import chain
+from conf_parser import species_from_config
 
 male_ratio = 0.5
 
@@ -37,6 +43,26 @@ def advance(simulation_step, species, habitat, month):
     next_step.males = simulation_step.males[:]
     next_step.females = simulation_step.females[:]
 
+    MONTHS_IN_YEAR = 12
+
+    alive_cutoff_birth_month = month - species.life_span * MONTHS_IN_YEAR
+    (dead_males, alive_males) = split_animals_by_birth_month(
+        next_step.males,
+        alive_cutoff_birth_month,
+    )
+
+    (dead_females, alive_females) = split_animals_by_birth_month(
+        next_step.females,
+        alive_cutoff_birth_month,
+    )
+
+    next_step.males = alive_males
+    next_step.females = alive_females
+
+    dead_animals = dead_males + dead_females
+    if dead_animals:
+        next_step.deaths[DEATH_OLD_AGE] = dead_animals
+
     # TODO: Probably should add a test condition, to not spawn if there are
     # no males
     new_animals = get_new_animals_from_breeding(len(next_step.females), month)
@@ -44,6 +70,17 @@ def advance(simulation_step, species, habitat, month):
     next_step.females += new_animals[GENDER_FEMALE]
 
     return next_step
+
+
+def split_animals_by_birth_month(animals, birth_month):
+    before = []
+    after = []
+    for animal in animals:
+        if animal.birth_month <= birth_month:
+            before.append(animal)
+        else:
+            after.append(animal)
+    return (before, after)
 
 
 def get_new_animals_from_breeding(count, month):
@@ -86,7 +123,10 @@ def main():
     with open(config_path) as config_file:
         configuration = yaml.safe_load(config_file)
 
-    species_list = configuration['species']
+    species_list = tuple(
+        species_from_config(config)
+        for config in configuration['species']
+    )
     habitats = configuration['habitats']
 
     simulation_years = 100
