@@ -16,6 +16,8 @@ def species_from_config(config):
     species.life_span = attributes['life_span']
     species.monthly_food_consumption = attributes['monthly_food_consumption']
     species.monthly_water_consumption = attributes['monthly_water_consumption']
+    species.minimum_temperature = attributes['minimum_temperature']
+    species.maximum_temperature = attributes['maximum_temperature']
 
     return species
 

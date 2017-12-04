@@ -2,6 +2,8 @@ from models import (
     DEATH_OLD_AGE,
     DEATH_STARVATION,
     DEATH_THIRST,
+    DEATH_TOO_HOT,
+    DEATH_TOO_COLD,
     GENDER_MALE,
     GENDER_FEMALE,
     Animal,
@@ -130,6 +132,52 @@ class AdvanceTest(TestCase):
         next_step = advance(simulation_step, species, habitat)
         self.assertEqual(1, len(next_step.animals))
         self.assertEqual(0, len(next_step.deaths))
+
+    def test_too_hot(self):
+        animal = Animal()
+        animal.consecutive_hot_months = 1
+
+        # Males cannot reproduce, so we can use them to test if they will die
+        # correctly.
+        simulation_step = SimulationStep()
+        simulation_step.animals = [animal]
+
+        species = Species()
+        species.life_span = 100
+        species.minimum_temperature = 100
+        species.maximum_temperature = 200
+
+        habitat = Habitat()
+        habitat.monthly_food = 1
+        habitat.monthly_water = 1
+        habitat.average_temperatures[SEASON_SPRING] = 1000
+
+        next_step = advance(simulation_step, species, habitat)
+        self.assertEqual(0, len(next_step.animals))
+        self.assertIn(DEATH_TOO_HOT, next_step.deaths)
+
+    def test_too_cold(self):
+        animal = Animal()
+        animal.consecutive_cold_months = 1
+
+        # Males cannot reproduce, so we can use them to test if they will die
+        # correctly.
+        simulation_step = SimulationStep()
+        simulation_step.animals = [animal]
+
+        species = Species()
+        species.life_span = 100
+        species.minimum_temperature = 100
+        species.maximum_temperature = 200
+
+        habitat = Habitat()
+        habitat.monthly_food = 1
+        habitat.monthly_water = 1
+        habitat.average_temperatures[SEASON_SPRING] = -1000
+
+        next_step = advance(simulation_step, species, habitat)
+        self.assertEqual(0, len(next_step.animals))
+        self.assertIn(DEATH_TOO_COLD, next_step.deaths)
 
 
 class SplitAnimalsByBirthMonthTest(TestCase):

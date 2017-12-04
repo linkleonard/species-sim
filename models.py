@@ -7,6 +7,8 @@ GENDER_UNKNOWN = None
 DEATH_OLD_AGE = 'old age'
 DEATH_STARVATION = 'starvation'
 DEATH_THIRST = 'thirst'
+DEATH_TOO_HOT = 'too hot'
+DEATH_TOO_COLD = 'too cold'
 
 SEASON_SPRING = 'spring'
 SEASON_SUMMER = 'summer'
@@ -22,6 +24,9 @@ class Animal(object):
         self.birth_month = 0
         self.last_feed_month = -1
         self.last_drink_month = -1
+
+        self.consecutive_hot_months = 0
+        self.consecutive_cold_months = 0
 
 
 class SimulationStep(object):
@@ -48,6 +53,8 @@ class Species(object):
         self.life_span = 0
         self.monthly_food_consumption = 0
         self.monthly_water_consumption = 0
+        self.minimum_temperature = 0
+        self.maximum_temperature = 0
 
 
 class Habitat(object):

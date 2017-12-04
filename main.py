@@ -6,6 +6,8 @@ from models import (
     DEATH_OLD_AGE,
     DEATH_STARVATION,
     DEATH_THIRST,
+    DEATH_TOO_COLD,
+    DEATH_TOO_HOT,
     GENDER_MALE,
     GENDER_FEMALE,
     SimulationStep,
@@ -148,6 +150,35 @@ def advance(simulation_step, species, habitat):
         fluctuation,
     )
 
+    for animal in alive_animals:
+        if temperature < species.minimum_temperature:
+            animal.consecutive_cold_months += 1
+        else:
+            animal.consecutive_cold_months = 0
+
+        if temperature > species.maximum_temperature:
+            animal.consecutive_hot_months += 1
+        else:
+            animal.consecutive_hot_months = 0
+
+    (hot_animals, alive_animals) = split_animals_by_consecutive_hot_months(
+        alive_animals,
+        1,
+    )
+
+    (cold_animals, alive_animals) = split_animals_by_consecutive_cold_months(
+        alive_animals,
+        1,
+    )
+
+    if cold_animals:
+        logger.debug('Deaths due to cold: %d', len(cold_animals))
+        next_step.deaths[DEATH_TOO_COLD] = cold_animals
+
+    if hot_animals:
+        logger.debug('Deaths due to heat: %d', len(hot_animals))
+        next_step.deaths[DEATH_TOO_HOT] = hot_animals
+
     next_step.animals = alive_animals
 
     # TODO: Probably should add a test condition, to not spawn if there are
@@ -215,6 +246,28 @@ def get_new_animals_from_breeding(count, month):
         born_animal.gender = gender
 
         yield born_animal
+
+
+def split_animals_by_consecutive_hot_months(animals, month):
+    before = []
+    after = []
+    for animal in animals:
+        if animal.consecutive_hot_months > month:
+            before.append(animal)
+        else:
+            after.append(animal)
+    return (before, after)
+
+
+def split_animals_by_consecutive_cold_months(animals, month):
+    before = []
+    after = []
+    for animal in animals:
+        if animal.consecutive_cold_months > month:
+            before.append(animal)
+        else:
+            after.append(animal)
+    return (before, after)
 
 
 def get_new_animal_gender():
