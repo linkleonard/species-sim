@@ -192,8 +192,8 @@ class SeparateAliveFromDeadTest(TestCase):
         animals = [Animal()]
 
         (alive, dead) = separate_alive_from_dead(animals, lambda x: False)
-        self.assertEqual(0, len(dead))
-        self.assertEqual(1, len(alive))
+        self.assertEqual(0, len(alive))
+        self.assertEqual(1, len(dead))
 
 
 class SimulationStepTest(TestCase):
