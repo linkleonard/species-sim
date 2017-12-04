@@ -15,6 +15,8 @@ from models import (
     AgeCheck,
     FoodCheck,
     DrinkCheck,
+    HeatCheck,
+    ColdCheck,
 )
 import sys
 from random import random
@@ -96,21 +98,6 @@ def advance(simulation_step, species, habitat):
     drink_check.simulation_month = simulation_step.month
     drink_check.minimum_month = next_month - 3
 
-    checks = [age_check, food_check, drink_check]
-
-    for check in checks:
-        for animal in alive_animals:
-            check.update(animal)
-
-        (alive_animals, dead_animals) = separate_alive_from_dead(
-            alive_animals,
-            lambda animal: check.is_still_alive(animal),
-        )
-
-        if dead_animals:
-            logger.debug('Deaths due to %s: %d', check.name, len(dead_animals))
-            next_step.deaths[check.death_type] = dead_animals
-
     # Normal distribution is probably a good fit for this.
     # A 0.5% chance corresponds to a standard deviation of ~2.81.
     # Therefore, one standard deviation is 15 / 2.81 ~= 5.34
@@ -125,34 +112,28 @@ def advance(simulation_step, species, habitat):
         fluctuation,
     )
 
-    for animal in alive_animals:
-        if temperature < species.minimum_temperature:
-            animal.consecutive_cold_months += 1
-        else:
-            animal.consecutive_cold_months = 0
+    heat_check = HeatCheck()
+    heat_check.temperature = temperature
+    heat_check.maximum_temperature = species.maximum_temperature
 
-        if temperature > species.maximum_temperature:
-            animal.consecutive_hot_months += 1
-        else:
-            animal.consecutive_hot_months = 0
+    cold_check = ColdCheck()
+    cold_check.temperature = temperature
+    cold_check.minimum_temperature = species.minimum_temperature
 
-    (alive_animals, hot_animals) = separate_alive_from_dead(
-        alive_animals,
-        lambda animal: animal.consecutive_hot_months <= 1,
-    )
+    checks = [age_check, food_check, drink_check, cold_check, heat_check]
 
-    (alive_animals, cold_animals) = separate_alive_from_dead(
-        alive_animals,
-        lambda animal: animal.consecutive_cold_months <= 1,
-    )
+    for check in checks:
+        for animal in alive_animals:
+            check.update(animal)
 
-    if cold_animals:
-        logger.debug('Deaths due to cold: %d', len(cold_animals))
-        next_step.deaths[DEATH_TOO_COLD] = cold_animals
+        (alive_animals, dead_animals) = separate_alive_from_dead(
+            alive_animals,
+            lambda animal: check.is_still_alive(animal),
+        )
 
-    if hot_animals:
-        logger.debug('Deaths due to heat: %d', len(hot_animals))
-        next_step.deaths[DEATH_TOO_HOT] = hot_animals
+        if dead_animals:
+            logger.debug('Deaths due to %s: %d', check.name, len(dead_animals))
+            next_step.deaths[check.death_type] = dead_animals
 
     next_step.animals = alive_animals
 

@@ -98,6 +98,66 @@ class DrinkCheck(ResourceCheck):
     resource_field = 'last_drink_month'
 
 
+class CounterCheck(StepCheck):
+    resource_field = ''
+
+    def __init__(self):
+        self.resource = 0
+        self.consumption = 0
+        self.simulation_month = 0
+        self.minimum_month = 0
+
+    def update(self, animal):
+        if self.resource >= self.consumption:
+            setattr(animal, self.resource_field, self.simulation_month)
+            self.resource -= self.consumption
+
+    def is_still_alive(self, animal):
+        return getattr(animal, self.resource_field) >= self.minimum_month
+
+
+class ConsecutiveConditionCheck(StepCheck):
+
+    def update(self, animal):
+        value = getattr(animal, self.counter_field)
+        setattr(animal, self.counter_field, value + 1)
+
+    def should_increment(self):
+        return True
+
+
+class HeatCheck(ConsecutiveConditionCheck):
+    name = 'Heat'
+    death_type = DEATH_TOO_HOT
+    counter_field = 'consecutive_hot_months'
+
+    def __init__(self):
+        self.temperature = 0
+        self.maximum_temperature = 0
+
+    def should_increment(self):
+        return self.temperature > self.maximum_temperature
+
+    def is_still_alive(self, animal):
+        return animal.consecutive_hot_months <= 1
+
+
+class ColdCheck(ConsecutiveConditionCheck):
+    name = 'Cold'
+    death_type = DEATH_TOO_COLD
+    counter_field = 'consecutive_cold_months'
+
+    def __init__(self):
+        self.temperature = 0
+        self.minimum_temperature = 0
+
+    def should_increment(self):
+        return self.temperature < self.minimum_temperature
+
+    def is_still_alive(self, animal):
+        return animal.consecutive_cold_months <= 1
+
+
 class Species(object):
     def __init__(self):
         self.name = ''
