@@ -18,6 +18,7 @@ def species_from_config(config):
     species.monthly_water_consumption = attributes['monthly_water_consumption']
     species.minimum_temperature = attributes['minimum_temperature']
     species.maximum_temperature = attributes['maximum_temperature']
+    species.gestation_months = attributes['gestation_period']
 
     return species
 

@@ -29,6 +29,7 @@ class Animal(object):
 
         self.consecutive_hot_months = 0
         self.consecutive_cold_months = 0
+        self.gestation_months = 0
 
 
 class SimulationStep(object):
@@ -188,6 +189,7 @@ class Species(object):
         self.monthly_water_consumption = 0
         self.minimum_temperature = 0
         self.maximum_temperature = 0
+        self.gestation_months = 0
 
 
 class Habitat(object):

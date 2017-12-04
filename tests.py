@@ -4,6 +4,7 @@ from models import (
     DEATH_THIRST,
     DEATH_TOO_HOT,
     DEATH_TOO_COLD,
+    GENDER_FEMALE,
     Animal,
     Habitat,
     SimulationStep,
@@ -18,10 +19,11 @@ from main import (
     get_new_animals_from_breeding,
     advance,
     separate_alive_from_dead,
+    breed_animals,
 )
 
 
-class BreedingTest(TestCase):
+class GetNewAnimalsFromBreedingTest(TestCase):
     def test(self):
         month = 1
         animals = tuple(get_new_animals_from_breeding(1, month))
@@ -32,6 +34,50 @@ class BreedingTest(TestCase):
 
     # TODO: Test that animals are placed in the right list, depending on
     # generated gender
+
+
+class BreedAnimalsTest(TestCase):
+    def test_start_breeding(self):
+        simulation_step = SimulationStep()
+
+        animal = Animal()
+        animal.gender = GENDER_FEMALE
+        animal.gestation_months = 0
+
+        species = Species()
+        species.gestation_months = 1
+
+        new_animals = tuple(breed_animals([animal], species, simulation_step))
+        self.assertEqual(1, animal.gestation_months)
+        self.assertEqual(0, len(new_animals))
+
+    def test_mid_breeding(self):
+        simulation_step = SimulationStep()
+
+        animal = Animal()
+        animal.gender = GENDER_FEMALE
+        animal.gestation_months = 1
+
+        species = Species()
+        species.gestation_months = 2
+
+        new_animals = tuple(breed_animals([animal], species, simulation_step))
+        self.assertEqual(2, animal.gestation_months)
+        self.assertEqual(0, len(new_animals))
+
+    def test_finish_breeding(self):
+        simulation_step = SimulationStep()
+
+        animal = Animal()
+        animal.gender = GENDER_FEMALE
+        animal.gestation_months = 1
+
+        species = Species()
+        species.gestation_months = 1
+
+        new_animals = tuple(breed_animals([animal], species, simulation_step))
+        self.assertEqual(0, animal.gestation_months)
+        self.assertEqual(1, len(new_animals))
 
 
 class AdvanceTest(TestCase):

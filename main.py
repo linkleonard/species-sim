@@ -130,18 +130,28 @@ def advance(simulation_step, species, habitat):
         if animal.gender == GENDER_FEMALE
     )
 
-    born_animals = tuple(
-        get_new_animals_from_breeding(
-            len(females),
-            next_month,
-        )
-    )
+    born_animals = tuple(breed_animals(females, species, simulation_step))
     logger.debug('Animals born: %d', len(born_animals))
     next_step.animals += born_animals
 
     logger.debug('Population currently at: %d', len(next_step.animals))
 
     return next_step
+
+
+def breed_animals(animals, species, simulation_step):
+    new_animal_count = 0
+    for animal in animals:
+        if animal.gestation_months == species.gestation_months:
+            new_animal_count += 1
+            animal.gestation_months = 0
+        else:
+            animal.gestation_months += 1
+
+    return get_new_animals_from_breeding(
+        new_animal_count,
+        simulation_step.month + 1,
+    )
 
 
 def separate_alive_from_dead(animals, is_animal_alive):
