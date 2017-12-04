@@ -11,6 +11,7 @@ from models import (
 )
 from random import random
 from conf_parser import habitat_from_config, species_from_config
+from collections import defaultdict
 
 male_ratio = 0.5
 
@@ -29,13 +30,16 @@ def get_initial_simulation_step():
 
 
 def simulate_species_in_habitat(species, habitat, simulation_years):
+    deaths_by_type = defaultdict(list)
     simulation_step = get_initial_simulation_step()
 
     for month in range(simulation_years * 12):
         simulation_step = advance(simulation_step, species, habitat)
-        # TODO: Do stats tracking for each simulation step
+        for death_reason, animals in simulation_step.deaths.items():
+            deaths_by_type[death_reason] += animals
 
-    # TODO: Return stats
+    for death_reason, animals in deaths_by_type.items():
+        print(death_reason, len(animals))
 
 
 def advance(simulation_step, species, habitat):
