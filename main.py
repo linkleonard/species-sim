@@ -5,6 +5,7 @@ import logging
 from models import (
     DEATH_OLD_AGE,
     DEATH_STARVATION,
+    DEATH_THIRST,
     GENDER_MALE,
     GENDER_FEMALE,
     SimulationStep,
@@ -98,6 +99,20 @@ def advance(simulation_step, species, habitat):
         species.monthly_food_consumption,
     )
 
+    water_given_to_animals = 0
+    remaining_water = habitat.monthly_water
+    for animal in alive_animals:
+        if remaining_water >= species.monthly_water_consumption:
+            remaining_water -= species.monthly_water_consumption
+            animal.last_drink_month = simulation_step.month
+            water_given_to_animals += 1
+
+    logger.debug(
+        'Gave water to %d animals (%d each)',
+        water_given_to_animals,
+        species.monthly_water_consumption,
+    )
+
     alive_cutoff_feed_month = next_month - 3
     (starved_animals, alive_animals) = split_animals_by_last_feed_month(
         alive_animals,
@@ -107,6 +122,16 @@ def advance(simulation_step, species, habitat):
     if starved_animals:
         logger.debug('Deaths due to starvation: %d', len(starved_animals))
         next_step.deaths[DEATH_STARVATION] = starved_animals
+
+    alive_cutoff_thirst_month = next_month - 1
+    (thirst_animals, alive_animals) = split_animals_by_last_drink_month(
+        alive_animals,
+        alive_cutoff_thirst_month,
+    )
+
+    if thirst_animals:
+        logger.debug('Deaths due to thirst: %d', len(thirst_animals))
+        next_step.deaths[DEATH_THIRST] = thirst_animals
 
     next_step.animals = alive_animals
 
@@ -136,7 +161,7 @@ def split_animals_by_birth_month(animals, birth_month):
     before = []
     after = []
     for animal in animals:
-        if animal.birth_month <= birth_month:
+        if animal.birth_month < birth_month:
             before.append(animal)
         else:
             after.append(animal)
@@ -147,7 +172,18 @@ def split_animals_by_last_feed_month(animals, month):
     before = []
     after = []
     for animal in animals:
-        if animal.last_feed_month <= month:
+        if animal.last_feed_month < month:
+            before.append(animal)
+        else:
+            after.append(animal)
+    return (before, after)
+
+
+def split_animals_by_last_drink_month(animals, month):
+    before = []
+    after = []
+    for animal in animals:
+        if animal.last_drink_month < month:
             before.append(animal)
         else:
             after.append(animal)
