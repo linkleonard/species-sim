@@ -21,7 +21,7 @@ from models import (
 import sys
 from random import random
 from conf_parser import habitat_from_config, species_from_config
-from random import normalvariate
+from random import random
 
 male_ratio = 0.5
 
@@ -88,10 +88,7 @@ def advance(simulation_step, species, habitat):
     food_check = FoodCheck(simulation_step, habitat, species)
     drink_check = DrinkCheck(simulation_step, habitat, species)
 
-    # Normal distribution is probably a good fit for this.
-    # A 0.5% chance corresponds to a standard deviation of ~2.81.
-    # Therefore, one standard deviation is 15 / 2.81 ~= 5.34
-    fluctuation = normalvariate(0, 5.34)
+    fluctuation = get_fluctuation()
 
     season = simulation_step.get_current_season()
     temperature = habitat.average_temperatures[season] + fluctuation
@@ -175,6 +172,11 @@ def get_new_animals_from_breeding(count, month):
         born_animal.gender = gender
 
         yield born_animal
+
+
+def get_fluctuation():
+    scale = 10 if random() < 0.95 else 30
+    return (random() - 0.5) * scale
 
 
 def get_new_animal_gender():
