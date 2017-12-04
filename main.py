@@ -32,20 +32,24 @@ def simulate_species_in_habitat(species, habitat, simulation_years):
     simulation_step = get_initial_simulation_step()
 
     for month in range(simulation_years * 12):
-        simulation_step = advance(simulation_step, species, habitat, month)
+        simulation_step = advance(simulation_step, species, habitat)
         # TODO: Do stats tracking for each simulation step
 
     # TODO: Return stats
 
 
-def advance(simulation_step, species, habitat, month):
+def advance(simulation_step, species, habitat):
     next_step = SimulationStep()
+
+    next_month = simulation_step.month + 1
+    next_step.month = next_month
+
     # Copy over the existing animals
     MONTHS_IN_YEAR = 12
 
     alive_animals = simulation_step.animals
 
-    alive_cutoff_birth_month = month - species.life_span * MONTHS_IN_YEAR
+    alive_cutoff_birth_month = next_month - species.life_span * MONTHS_IN_YEAR
     (dead_age_animals, alive_animals) = split_animals_by_birth_month(
         alive_animals,
         alive_cutoff_birth_month,
@@ -54,7 +58,7 @@ def advance(simulation_step, species, habitat, month):
     if dead_age_animals:
         next_step.deaths[DEATH_OLD_AGE] = dead_age_animals
 
-    alive_cutoff_feed_month = month - 3
+    alive_cutoff_feed_month = next_month - 3
     (starved_animals, alive_animals) = split_animals_by_last_feed_month(
         alive_animals,
         alive_cutoff_feed_month,
@@ -72,7 +76,10 @@ def advance(simulation_step, species, habitat, month):
         for animal in next_step.animals
         if animal.gender == GENDER_FEMALE
     )
-    next_step.animals += get_new_animals_from_breeding(len(females), month)
+    next_step.animals += get_new_animals_from_breeding(
+        len(females),
+        next_month,
+    )
 
     return next_step
 
@@ -105,6 +112,7 @@ def get_new_animals_from_breeding(count, month):
 
         born_animal = Animal()
         born_animal.birth_month = month
+        born_animal.last_feed_month = month
         born_animal.gender = gender
 
         yield born_animal

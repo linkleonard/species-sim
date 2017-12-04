@@ -19,6 +19,7 @@ class SimulationStep(object):
     def __init__(self):
         self.animals = []
         self.deaths = {}
+        self.month = 0
 
 
 class Species(object):
