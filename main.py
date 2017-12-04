@@ -58,6 +58,12 @@ def advance(simulation_step, species, habitat):
     if dead_age_animals:
         next_step.deaths[DEATH_OLD_AGE] = dead_age_animals
 
+    remaining_food = habitat.monthly_food
+    for animal in alive_animals:
+        if remaining_food >= species.monthly_food_consumption:
+            remaining_food -= species.monthly_food_consumption
+            animal.last_feed_month = simulation_step.month
+
     alive_cutoff_feed_month = next_month - 3
     (starved_animals, alive_animals) = split_animals_by_last_feed_month(
         alive_animals,
@@ -112,7 +118,7 @@ def get_new_animals_from_breeding(count, month):
 
         born_animal = Animal()
         born_animal.birth_month = month
-        born_animal.last_feed_month = month
+        born_animal.last_feed_month = month - 1
         born_animal.gender = gender
 
         yield born_animal

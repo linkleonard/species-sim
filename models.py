@@ -12,7 +12,7 @@ class Animal(object):
 
         # Month number when an animal was born.
         self.birth_month = 0
-        self.last_feed_month = 0
+        self.last_feed_month = -1
 
 
 class SimulationStep(object):

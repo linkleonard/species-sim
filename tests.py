@@ -25,7 +25,28 @@ class BreedingTest(TestCase):
     # generated gender
 
 
-class DeathTest(TestCase):
+class AdvanceTest(TestCase):
+    def test_feed(self):
+        animals = [Animal(), Animal()]
+
+        # Males cannot reproduce, so we can use them to test if they will die
+        # correctly.
+        simulation_step = SimulationStep()
+        simulation_step.month = 4
+        simulation_step.animals = animals
+
+        species = Species()
+        species.life_span = 1
+        species.monthly_food_consumption = 1
+
+        habitat = Habitat()
+        habitat.monthly_food = 1
+
+        next_step = advance(simulation_step, species, habitat)
+        # One animal should have died due to starvation from not enough food
+        self.assertEqual(1, len(next_step.animals))
+        self.assertIn(DEATH_STARVATION, next_step.deaths)
+
     def test_old_age(self):
         animal = Animal()
 
@@ -38,7 +59,7 @@ class DeathTest(TestCase):
         species = Species()
         species.life_span = 1
 
-        habitat = {}
+        habitat = Habitat()
 
         next_step = advance(simulation_step, species, habitat)
         self.assertEqual(0, len(next_step.animals))
