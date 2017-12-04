@@ -69,6 +69,10 @@ def simulate_species_in_habitat(species, habitat, simulation_years):
         simulation_step = advance(simulation_step, species, habitat)
         simulation_steps.append(simulation_step)
 
+        # No reason to continue if no more animals exist
+        if not simulation_step.animals:
+            break
+
     return simulation_steps
 
 
