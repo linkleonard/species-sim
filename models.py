@@ -68,23 +68,34 @@ class AgeCheck(StepCheck):
         return animal.birth_month >= self.minimum_birth_month
 
 
-class FoodCheck(StepCheck):
-    name = 'Food'
-    death_type = DEATH_STARVATION
+class ResourceCheck(StepCheck):
+    resource_field = ''
 
     def __init__(self):
-        self.remaining_food = 0
+        self.resource = 0
         self.consumption = 0
         self.simulation_month = 0
-        self.minimum_feed_month = 0
+        self.minimum_month = 0
 
     def update(self, animal):
-        if self.remaining_food >= self.consumption:
-            animal.last_feed_month = self.simulation_month
-            self.remaining_food -= self.consumption
+        if self.resource >= self.consumption:
+            setattr(animal, self.resource_field, self.simulation_month)
+            self.resource -= self.consumption
 
     def is_still_alive(self, animal):
-        return animal.last_feed_month >= self.minimum_feed_month
+        return getattr(animal, self.resource_field) >= self.minimum_month
+
+
+class FoodCheck(ResourceCheck):
+    name = 'Food'
+    death_type = DEATH_STARVATION
+    resource_field = 'last_feed_month'
+
+
+class DrinkCheck(ResourceCheck):
+    name = 'Drink'
+    death_type = DEATH_THIRST
+    resource_field = 'last_drink_month'
 
 
 class Species(object):

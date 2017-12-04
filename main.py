@@ -14,6 +14,7 @@ from models import (
     Animal,
     AgeCheck,
     FoodCheck,
+    DrinkCheck,
 )
 import sys
 from random import random
@@ -84,12 +85,18 @@ def advance(simulation_step, species, habitat):
     age_check.minimum_birth_month = next_month - species.life_span * MONTHS_IN_YEAR
 
     food_check = FoodCheck()
-    food_check.remaining_food = habitat.monthly_food
+    food_check.resource = habitat.monthly_food
     food_check.consumption = species.monthly_food_consumption
     food_check.simulation_month = simulation_step.month
-    food_check.minimum_feed_month = next_month - 3
+    food_check.minimum_month = next_month - 3
 
-    checks = [age_check, food_check]
+    drink_check = DrinkCheck()
+    drink_check.resource = habitat.monthly_water
+    drink_check.consumption = species.monthly_water_consumption
+    drink_check.simulation_month = simulation_step.month
+    drink_check.minimum_month = next_month - 3
+
+    checks = [age_check, food_check, drink_check]
 
     for check in checks:
         for animal in alive_animals:
@@ -103,30 +110,6 @@ def advance(simulation_step, species, habitat):
         if dead_animals:
             logger.debug('Deaths due to %s: %d', check.name, len(dead_animals))
             next_step.deaths[check.death_type] = dead_animals
-
-    water_given_to_animals = 0
-    remaining_water = habitat.monthly_water
-    for animal in alive_animals:
-        if remaining_water >= species.monthly_water_consumption:
-            remaining_water -= species.monthly_water_consumption
-            animal.last_drink_month = simulation_step.month
-            water_given_to_animals += 1
-
-    logger.debug(
-        'Gave water to %d animals (%d each)',
-        water_given_to_animals,
-        species.monthly_water_consumption,
-    )
-
-    alive_cutoff_thirst_month = next_month - 1
-    (alive_animals, thirst_animals) = separate_alive_from_dead(
-        alive_animals,
-        lambda animal: animal.last_drink_month >= alive_cutoff_thirst_month,
-    )
-
-    if thirst_animals:
-        logger.debug('Deaths due to thirst: %d', len(thirst_animals))
-        next_step.deaths[DEATH_THIRST] = thirst_animals
 
     # Normal distribution is probably a good fit for this.
     # A 0.5% chance corresponds to a standard deviation of ~2.81.
