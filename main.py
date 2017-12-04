@@ -268,8 +268,12 @@ def generate_simulation_report(simulation_steps, output_stream):
 
     for death_reason, animals in deaths_by_type.items():
         logging.info('Deaths due to %s: %d', death_reason, len(animals))
+        if total_deaths > 0:
+            percentage = len(animals) / total_deaths * 100
+        else:
+            percentage = 0
         lines.append('\t\t\t{percentage: 6.2f}%  {reason}'.format(
-            percentage=len(animals) / total_deaths * 100,
+            percentage=percentage,
             reason=death_reason,
         ))
 
