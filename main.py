@@ -10,7 +10,6 @@ from models import (
     DEATH_TOO_HOT,
     GENDER_MALE,
     GENDER_FEMALE,
-    MONTHS_IN_YEAR,
     SimulationStep,
     Animal,
     AgeCheck,
@@ -22,7 +21,6 @@ from models import (
 import sys
 from random import random
 from conf_parser import habitat_from_config, species_from_config
-from collections import defaultdict
 from random import normalvariate
 
 male_ratio = 0.5

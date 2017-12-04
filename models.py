@@ -65,7 +65,8 @@ class AgeCheck(StepCheck):
 
     def __init__(self, simulation_step, species):
         next_month = simulation_step.month + 1
-        self.minimum_birth_month = next_month - species.life_span * MONTHS_IN_YEAR
+        lifespan_months = species.life_span * MONTHS_IN_YEAR
+        self.minimum_birth_month = next_month - lifespan_months
 
     def is_still_alive(self, animal):
         return animal.birth_month >= self.minimum_birth_month

@@ -4,8 +4,6 @@ from models import (
     DEATH_THIRST,
     DEATH_TOO_HOT,
     DEATH_TOO_COLD,
-    GENDER_MALE,
-    GENDER_FEMALE,
     Animal,
     Habitat,
     SimulationStep,
@@ -16,7 +14,11 @@ from models import (
     SEASON_WINTER,
 )
 from unittest import TestCase
-from main import get_new_animals_from_breeding, advance, separate_alive_from_dead
+from main import (
+    get_new_animals_from_breeding,
+    advance,
+    separate_alive_from_dead,
+)
 
 
 class BreedingTest(TestCase):
