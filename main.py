@@ -34,17 +34,48 @@ def get_initial_simulation_step():
     return simulation_step
 
 
+def get_average_population(simulation_steps):
+    total = sum(
+        len(simulation_step.animals)
+        for simulation_step in simulation_steps
+    )
+    return total / len(simulation_steps)
+
+
+def get_max_population(simulation_steps):
+    generator = (
+        len(simulation_step.animals)
+        for simulation_step in simulation_steps
+    )
+    return max(generator, default=0)
+
+
 def simulate_species_in_habitat(species, habitat, simulation_years):
     deaths_by_type = defaultdict(list)
     simulation_step = get_initial_simulation_step()
+    simulation_steps = [simulation_step]
 
     for month in range(simulation_years * 12):
         simulation_step = advance(simulation_step, species, habitat)
         for death_reason, animals in simulation_step.deaths.items():
             deaths_by_type[death_reason] += animals
+        simulation_steps.append(simulation_step)
+
+    average_population = get_average_population(simulation_steps)
+    max_population = get_max_population(simulation_steps)
+
+    logging.info('Average population: %d', average_population)
+    logging.info('Maximum population: %d', max_population)
+
+    total_deaths = sum(len(animals) for animals in deaths_by_type.values())
+
+    total_born = total_deaths + len(simulation_step.animals)
+    mortality_rate = total_deaths / total_born
+
+    logging.info('Mortality rate: %.2f', mortality_rate * 100)
 
     for death_reason, animals in deaths_by_type.items():
-        print(death_reason, len(animals))
+        logging.info('Deaths due to %s: %d', death_reason, len(animals))
 
 
 def advance(simulation_step, species, habitat):
