@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 import os.path
 import yaml
+import logging
 from models import (
     DEATH_OLD_AGE,
     DEATH_STARVATION,
@@ -14,6 +15,10 @@ from conf_parser import habitat_from_config, species_from_config
 from collections import defaultdict
 
 male_ratio = 0.5
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler())
 
 
 def get_initial_simulation_step():
@@ -46,6 +51,7 @@ def advance(simulation_step, species, habitat):
     next_step = SimulationStep()
 
     next_month = simulation_step.month + 1
+    logger.debug('Advancing to step %d', next_month)
     next_step.month = next_month
 
     # Copy over the existing animals
@@ -60,13 +66,18 @@ def advance(simulation_step, species, habitat):
     )
 
     if dead_age_animals:
+        logger.debug('Deaths due to old age: %d', len(dead_age_animals))
         next_step.deaths[DEATH_OLD_AGE] = dead_age_animals
 
+    fed_animals = 0
     remaining_food = habitat.monthly_food
     for animal in alive_animals:
         if remaining_food >= species.monthly_food_consumption:
             remaining_food -= species.monthly_food_consumption
             animal.last_feed_month = simulation_step.month
+            fed_animals += 1
+
+    logger.debug('Fed %d animals (%d each)', fed_animals, species.monthly_food_consumption)
 
     alive_cutoff_feed_month = next_month - 3
     (starved_animals, alive_animals) = split_animals_by_last_feed_month(
@@ -75,6 +86,7 @@ def advance(simulation_step, species, habitat):
     )
 
     if starved_animals:
+        logger.debug('Deaths due to starvation: %d', len(starved_animals))
         next_step.deaths[DEATH_STARVATION] = starved_animals
 
     next_step.animals = alive_animals
@@ -86,10 +98,15 @@ def advance(simulation_step, species, habitat):
         for animal in next_step.animals
         if animal.gender == GENDER_FEMALE
     )
-    next_step.animals += get_new_animals_from_breeding(
-        len(females),
-        next_month,
+
+    born_animals = tuple(
+        get_new_animals_from_breeding(
+            len(females),
+            next_month,
+        )
     )
+    logger.debug('Animals born: %d', len(born_animals))
+    next_step.animals += born_animals
 
     return next_step
 
