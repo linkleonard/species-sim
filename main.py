@@ -12,6 +12,8 @@ from models import (
     GENDER_FEMALE,
     SimulationStep,
     Animal,
+    AgeCheck,
+    FoodCheck,
 )
 import sys
 from random import random
@@ -78,29 +80,29 @@ def advance(simulation_step, species, habitat):
 
     alive_animals = simulation_step.animals
 
-    alive_cutoff_birth_month = next_month - species.life_span * MONTHS_IN_YEAR
-    (dead_age_animals, alive_animals) = separate_dead_from_alive(
-        alive_animals,
-        lambda animal: animal.birth_month < alive_cutoff_birth_month,
-    )
+    age_check = AgeCheck()
+    age_check.minimum_birth_month = next_month - species.life_span * MONTHS_IN_YEAR
 
-    if dead_age_animals:
-        logger.debug('Deaths due to old age: %d', len(dead_age_animals))
-        next_step.deaths[DEATH_OLD_AGE] = dead_age_animals
+    food_check = FoodCheck()
+    food_check.remaining_food = habitat.monthly_food
+    food_check.consumption = species.monthly_food_consumption
+    food_check.simulation_month = simulation_step.month
+    food_check.minimum_feed_month = next_month - 3
 
-    fed_animals = 0
-    remaining_food = habitat.monthly_food
-    for animal in alive_animals:
-        if remaining_food >= species.monthly_food_consumption:
-            remaining_food -= species.monthly_food_consumption
-            animal.last_feed_month = simulation_step.month
-            fed_animals += 1
+    checks = [age_check, food_check]
 
-    logger.debug(
-        'Fed %d animals (%d each)',
-        fed_animals,
-        species.monthly_food_consumption,
-    )
+    for check in checks:
+        for animal in alive_animals:
+            check.update(animal)
+
+        (alive_animals, dead_animals) = separate_alive_from_dead(
+            alive_animals,
+            lambda animal: check.is_still_alive(animal),
+        )
+
+        if dead_animals:
+            logger.debug('Deaths due to %s: %d', check.name, len(dead_animals))
+            next_step.deaths[check.death_type] = dead_animals
 
     water_given_to_animals = 0
     remaining_water = habitat.monthly_water
@@ -116,20 +118,10 @@ def advance(simulation_step, species, habitat):
         species.monthly_water_consumption,
     )
 
-    alive_cutoff_feed_month = next_month - 3
-    (starved_animals, alive_animals) = separate_dead_from_alive(
-        alive_animals,
-        lambda animal: animal.last_feed_month < alive_cutoff_feed_month,
-    )
-
-    if starved_animals:
-        logger.debug('Deaths due to starvation: %d', len(starved_animals))
-        next_step.deaths[DEATH_STARVATION] = starved_animals
-
     alive_cutoff_thirst_month = next_month - 1
-    (thirst_animals, alive_animals) = separate_dead_from_alive(
+    (alive_animals, thirst_animals) = separate_alive_from_dead(
         alive_animals,
-        lambda animal: animal.last_drink_month < alive_cutoff_thirst_month,
+        lambda animal: animal.last_drink_month >= alive_cutoff_thirst_month,
     )
 
     if thirst_animals:
@@ -161,14 +153,14 @@ def advance(simulation_step, species, habitat):
         else:
             animal.consecutive_hot_months = 0
 
-    (hot_animals, alive_animals) = separate_dead_from_alive(
+    (alive_animals, hot_animals) = separate_alive_from_dead(
         alive_animals,
-        lambda animal: animal.consecutive_hot_months > 1,
+        lambda animal: animal.consecutive_hot_months <= 1,
     )
 
-    (cold_animals, alive_animals) = separate_dead_from_alive(
+    (alive_animals, cold_animals) = separate_alive_from_dead(
         alive_animals,
-        lambda animal: animal.consecutive_cold_months > 1,
+        lambda animal: animal.consecutive_cold_months <= 1,
     )
 
     if cold_animals:
@@ -203,15 +195,15 @@ def advance(simulation_step, species, habitat):
     return next_step
 
 
-def separate_dead_from_alive(animals, is_animal_dead):
+def separate_alive_from_dead(animals, is_animal_alive):
     dead = []
     alive = []
     for animal in animals:
-        if is_animal_dead(animal):
-            dead.append(animal)
-        else:
+        if is_animal_alive(animal):
             alive.append(animal)
-    return (dead, alive)
+        else:
+            dead.append(animal)
+    return (alive, dead)
 
 
 def get_new_animals_from_breeding(count, month):
