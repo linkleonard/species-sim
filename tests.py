@@ -1,8 +1,10 @@
 from models import (
     DEATH_OLD_AGE,
+    DEATH_STARVATION,
     GENDER_MALE,
     GENDER_FEMALE,
     Animal,
+    Habitat,
     SimulationStep,
     Species,
 )
@@ -29,7 +31,7 @@ class BreedingTest(TestCase):
 
 
 class DeathTest(TestCase):
-    def test(self):
+    def test_old_age(self):
         month = 13
         animal = Animal()
 
@@ -46,6 +48,46 @@ class DeathTest(TestCase):
         next_step = advance(simulation_step, species, habitat, month)
         self.assertEqual(0, len(next_step.males + next_step.females))
         self.assertIn(DEATH_OLD_AGE, next_step.deaths)
+
+    def test_starvation(self):
+        month = 3
+        animal = Animal()
+
+        # Males cannot reproduce, so we can use them to test if they will die
+        # correctly.
+        simulation_step = SimulationStep()
+        simulation_step.males = [animal]
+
+        species = Species()
+        species.life_span = 100
+        species.monthly_food_consumption = 1
+
+        habitat = Habitat()
+        habitat.monthly_food = 0
+
+        next_step = advance(simulation_step, species, habitat, month)
+        self.assertEqual(0, len(next_step.males + next_step.females))
+        self.assertIn(DEATH_STARVATION, next_step.deaths)
+
+    def test_no_death(self):
+        month = 0
+        animal = Animal()
+
+        # Males cannot reproduce, so we can use them to test if they will die
+        # correctly.
+        simulation_step = SimulationStep()
+        simulation_step.males = [animal]
+
+        species = Species()
+        species.life_span = 100
+        species.monthly_food_consumption = 1
+
+        habitat = Habitat()
+        habitat.monthly_food = 1
+
+        next_step = advance(simulation_step, species, habitat, month)
+        self.assertEqual(1, len(next_step.males + next_step.females))
+        self.assertEqual(0, len(next_step.deaths))
 
 
 class SplitAnimalsByBirthMonthTest(TestCase):

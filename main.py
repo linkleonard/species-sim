@@ -3,6 +3,7 @@ import os.path
 import yaml
 from models import (
     DEATH_OLD_AGE,
+    DEATH_STARVATION,
     GENDER_MALE,
     GENDER_FEMALE,
     SimulationStep,
@@ -45,23 +46,41 @@ def advance(simulation_step, species, habitat, month):
 
     MONTHS_IN_YEAR = 12
 
+    alive_males = next_step.males
+    alive_females = next_step.females
+
     alive_cutoff_birth_month = month - species.life_span * MONTHS_IN_YEAR
-    (dead_males, alive_males) = split_animals_by_birth_month(
-        next_step.males,
+    (dead_age_males, alive_males) = split_animals_by_birth_month(
+        alive_males,
         alive_cutoff_birth_month,
     )
 
-    (dead_females, alive_females) = split_animals_by_birth_month(
-        next_step.females,
+    (dead_age_females, alive_females) = split_animals_by_birth_month(
+        alive_females,
         alive_cutoff_birth_month,
+    )
+
+    dead_age_animals = dead_age_males + dead_age_females
+    if dead_age_animals:
+        next_step.deaths[DEATH_OLD_AGE] = dead_age_animals
+
+    alive_cutoff_feed_month = month - 3
+    (starved_males, alive_males) = split_animals_by_last_feed_month(
+        alive_males,
+        alive_cutoff_feed_month,
+    )
+
+    (starved_females, alive_females) = split_animals_by_last_feed_month(
+        alive_females,
+        alive_cutoff_feed_month,
     )
 
     next_step.males = alive_males
     next_step.females = alive_females
 
-    dead_animals = dead_males + dead_females
-    if dead_animals:
-        next_step.deaths[DEATH_OLD_AGE] = dead_animals
+    starved_animals = starved_males + starved_females
+    if starved_animals:
+        next_step.deaths[DEATH_STARVATION] = starved_animals
 
     # TODO: Probably should add a test condition, to not spawn if there are
     # no males
@@ -81,6 +100,18 @@ def split_animals_by_birth_month(animals, birth_month):
         else:
             after.append(animal)
     return (before, after)
+
+
+def split_animals_by_last_feed_month(animals, month):
+    before = []
+    after = []
+    for animal in animals:
+        if animal.last_feed_month <= month:
+            before.append(animal)
+        else:
+            after.append(animal)
+    return (before, after)
+
 
 
 def get_new_animals_from_breeding(count, month):
