@@ -29,6 +29,12 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler())
 
+log_path = os.path.join(
+    os.path.dirname(__file__),
+    'output.log',
+)
+logger.addHandler(logging.FileHandler(log_path))
+
 
 def get_initial_simulation_step():
     male = Animal()
