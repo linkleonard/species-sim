@@ -1,4 +1,11 @@
-from models import Habitat, Species
+from models import (
+    Habitat,
+    Species,
+    SEASON_SPRING,
+    SEASON_SUMMER,
+    SEASON_FALL,
+    SEASON_WINTER,
+)
 
 
 def species_from_config(config):
@@ -18,5 +25,11 @@ def habitat_from_config(config):
     habitat.name = config['name']
     habitat.monthly_food = config['monthly_food']
     habitat.monthly_water = config['monthly_water']
+
+    config_temperatures = config['average_temperature']
+    habitat.average_temperatures[SEASON_SPRING] = config_temperatures['spring']
+    habitat.average_temperatures[SEASON_SUMMER] = config_temperatures['summer']
+    habitat.average_temperatures[SEASON_FALL] = config_temperatures['fall']
+    habitat.average_temperatures[SEASON_WINTER] = config_temperatures['winter']
 
     return habitat

@@ -8,6 +8,10 @@ from models import (
     Habitat,
     SimulationStep,
     Species,
+    SEASON_SPRING,
+    SEASON_SUMMER,
+    SEASON_FALL,
+    SEASON_WINTER,
 )
 from unittest import TestCase
 from main import get_new_animals_from_breeding, advance, split_animals_by_birth_month
@@ -139,3 +143,22 @@ class SplitAnimalsByBirthMonthTest(TestCase):
         (before, after) = split_animals_by_birth_month(animals, month_cutoff)
         self.assertEqual(1, len(before))
         self.assertEqual(0, len(after))
+
+
+class SimulationStepTest(TestCase):
+    def test_get_current_season(self):
+        months_in_seasons = {
+            SEASON_SPRING: [0, 1, 2],
+            SEASON_SUMMER: [3, 4, 5],
+            SEASON_FALL: [6, 7, 8],
+            SEASON_WINTER: [9, 10, 11],
+        }
+        for season, months in months_in_seasons.items():
+            for month in months:
+                with self.subTest(month=month):
+                    simulation_step = SimulationStep()
+                    simulation_step.month = month
+                    self.assertEqual(
+                        season,
+                        simulation_step.get_current_season(),
+                    )

@@ -1,3 +1,5 @@
+from math import floor
+
 GENDER_MALE = 'male'
 GENDER_FEMALE = 'female'
 GENDER_UNKNOWN = None
@@ -5,6 +7,11 @@ GENDER_UNKNOWN = None
 DEATH_OLD_AGE = 'old age'
 DEATH_STARVATION = 'starvation'
 DEATH_THIRST = 'thirst'
+
+SEASON_SPRING = 'spring'
+SEASON_SUMMER = 'summer'
+SEASON_FALL = 'fall'
+SEASON_WINTER = 'winter'
 
 
 class Animal(object):
@@ -23,6 +30,16 @@ class SimulationStep(object):
         self.deaths = {}
         self.month = 0
 
+    def get_current_season(self):
+        seasons_by_index = [
+            SEASON_SPRING,
+            SEASON_SUMMER,
+            SEASON_FALL,
+            SEASON_WINTER,
+        ]
+        month = self.month % 12
+        return seasons_by_index[floor(month / 3)]
+
 
 class Species(object):
     def __init__(self):
@@ -38,3 +55,9 @@ class Habitat(object):
         self.name = ''
         self.monthly_food = 0
         self.monthly_water = 0
+        self.average_temperatures = {
+            SEASON_SPRING: 0,
+            SEASON_SUMMER: 0,
+            SEASON_FALL: 0,
+            SEASON_WINTER: 0,
+        }

@@ -15,6 +15,7 @@ import sys
 from random import random
 from conf_parser import habitat_from_config, species_from_config
 from collections import defaultdict
+from random import normalvariate
 
 male_ratio = 0.5
 
@@ -132,6 +133,20 @@ def advance(simulation_step, species, habitat):
     if thirst_animals:
         logger.debug('Deaths due to thirst: %d', len(thirst_animals))
         next_step.deaths[DEATH_THIRST] = thirst_animals
+
+    # Normal distribution is probably a good fit for this.
+    # A 0.5% chance corresponds to a standard deviation of ~2.81.
+    # Therefore, one standard deviation is 15 / 2.81 ~= 5.34
+    fluctuation = normalvariate(0, 5.34)
+
+    season = simulation_step.get_current_season()
+    temperature = habitat.average_temperatures[season] + fluctuation
+    logger.debug(
+        'Current temperature: %d (%d%+d)',
+        temperature,
+        habitat.average_temperatures[season],
+        fluctuation,
+    )
 
     next_step.animals = alive_animals
 
