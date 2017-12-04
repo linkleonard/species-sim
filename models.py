@@ -32,4 +32,5 @@ class Species(object):
 
 class Habitat(object):
     def __init__(self):
+        self.name = ''
         self.monthly_food = 0

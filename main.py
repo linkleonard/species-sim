@@ -10,6 +10,7 @@ from models import (
     SimulationStep,
     Animal,
 )
+import sys
 from random import random
 from conf_parser import habitat_from_config, species_from_config
 from collections import defaultdict
@@ -51,31 +52,14 @@ def get_max_population(simulation_steps):
 
 
 def simulate_species_in_habitat(species, habitat, simulation_years):
-    deaths_by_type = defaultdict(list)
     simulation_step = get_initial_simulation_step()
     simulation_steps = [simulation_step]
 
     for month in range(simulation_years * 12):
         simulation_step = advance(simulation_step, species, habitat)
-        for death_reason, animals in simulation_step.deaths.items():
-            deaths_by_type[death_reason] += animals
         simulation_steps.append(simulation_step)
 
-    average_population = get_average_population(simulation_steps)
-    max_population = get_max_population(simulation_steps)
-
-    logging.info('Average population: %d', average_population)
-    logging.info('Maximum population: %d', max_population)
-
-    total_deaths = sum(len(animals) for animals in deaths_by_type.values())
-
-    total_born = total_deaths + len(simulation_step.animals)
-    mortality_rate = total_deaths / total_born
-
-    logging.info('Mortality rate: %.2f', mortality_rate * 100)
-
-    for death_reason, animals in deaths_by_type.items():
-        logging.info('Deaths due to %s: %d', death_reason, len(animals))
+    return simulation_steps
 
 
 def advance(simulation_step, species, habitat):
@@ -195,24 +179,84 @@ def main():
     parser = get_argument_parser()
     arguments = parser.parse_args()
     config_path = os.path.abspath(arguments.config)
+    output_stream = sys.stdout
 
-    # TODO: Do we need to validate the configuration file?
-    with open(config_path) as config_file:
-        configuration = yaml.safe_load(config_file)
+    if arguments.output is not None:
+        output_stream = open(arguments.output, 'w')
 
-    species_list = tuple(
-        species_from_config(config)
-        for config in configuration['species']
-    )
-    habitats = tuple(
-        habitat_from_config(config)
-        for config in configuration['habitats']
-    )
+    try:
+        # TODO: Do we need to validate the configuration file?
+        with open(config_path) as config_file:
+            configuration = yaml.safe_load(config_file)
 
-    simulation_years = 100
-    for species in species_list:
-        for habitat in habitats:
-            simulate_species_in_habitat(species, habitat, simulation_years)
+        species_list = tuple(
+            species_from_config(config)
+            for config in configuration['species']
+        )
+        habitats = tuple(
+            habitat_from_config(config)
+            for config in configuration['habitats']
+        )
+
+        simulation_years = 100
+        print(
+            'Simulation ran for {count:d} years'.format(
+                count=simulation_years,
+            ),
+            file=output_stream,
+        )
+        for species in species_list:
+            print('{name}:'.format(name=species.name), file=output_stream)
+            for habitat in habitats:
+                print(
+                    '\t{name:}:'.format(name=habitat.name),
+                    file=output_stream,
+                )
+                simulation_steps = simulate_species_in_habitat(
+                    species,
+                    habitat,
+                    simulation_years,
+                )
+                generate_simulation_report(simulation_steps, output_stream)
+    finally:
+        if arguments.output is not None:
+            output_stream.close()
+
+
+def generate_simulation_report(simulation_steps, output_stream):
+    deaths_by_type = defaultdict(list)
+    for simulation_step in simulation_steps:
+        for death_reason, animals in simulation_step.deaths.items():
+            deaths_by_type[death_reason] += animals
+
+    average_population = get_average_population(simulation_steps)
+    max_population = get_max_population(simulation_steps)
+
+    logging.info('Average population: %d', average_population)
+    logging.info('Maximum population: %d', max_population)
+
+    total_deaths = sum(len(animals) for animals in deaths_by_type.values())
+
+    total_born = total_deaths + len(simulation_step.animals)
+    mortality_rate = total_deaths / total_born
+
+    logging.info('Mortality rate: %.2f%%', mortality_rate * 100)
+
+    lines = [
+        '\t\tAverage Population: {count:.2f}'.format(count=average_population),
+        '\t\tMax Population: {count:d}'.format(count=max_population),
+        '\t\tMortality Rate: {rate:.2f}%'.format(rate=mortality_rate * 100),
+        '\t\tCause of Death:',
+    ]
+
+    for death_reason, animals in deaths_by_type.items():
+        logging.info('Deaths due to %s: %d', death_reason, len(animals))
+        lines.append('\t\t\t{percentage: 6.2f}%  {reason}'.format(
+            percentage=len(animals) / total_deaths * 100,
+            reason=death_reason,
+        ))
+
+    print('\n'.join(lines), file=output_stream)
 
 
 def get_argument_parser():
@@ -220,6 +264,11 @@ def get_argument_parser():
     parser.add_argument(
         'config',
         help='Path to a YAML environment configuration file',
+    )
+    parser.add_argument(
+        '--output',
+        required=False,
+        help='Path of output file. If omitted, write to stdout'
     )
     return parser
 
