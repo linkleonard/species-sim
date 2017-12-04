@@ -79,9 +79,9 @@ def advance(simulation_step, species, habitat):
     alive_animals = simulation_step.animals
 
     alive_cutoff_birth_month = next_month - species.life_span * MONTHS_IN_YEAR
-    (dead_age_animals, alive_animals) = split_animals_by_birth_month(
+    (dead_age_animals, alive_animals) = separate_dead_from_alive(
         alive_animals,
-        alive_cutoff_birth_month,
+        lambda animal: animal.birth_month < alive_cutoff_birth_month,
     )
 
     if dead_age_animals:
@@ -117,9 +117,9 @@ def advance(simulation_step, species, habitat):
     )
 
     alive_cutoff_feed_month = next_month - 3
-    (starved_animals, alive_animals) = split_animals_by_last_feed_month(
+    (starved_animals, alive_animals) = separate_dead_from_alive(
         alive_animals,
-        alive_cutoff_feed_month,
+        lambda animal: animal.last_feed_month < alive_cutoff_feed_month,
     )
 
     if starved_animals:
@@ -127,9 +127,9 @@ def advance(simulation_step, species, habitat):
         next_step.deaths[DEATH_STARVATION] = starved_animals
 
     alive_cutoff_thirst_month = next_month - 1
-    (thirst_animals, alive_animals) = split_animals_by_last_drink_month(
+    (thirst_animals, alive_animals) = separate_dead_from_alive(
         alive_animals,
-        alive_cutoff_thirst_month,
+        lambda animal: animal.last_drink_month < alive_cutoff_thirst_month,
     )
 
     if thirst_animals:
@@ -161,14 +161,14 @@ def advance(simulation_step, species, habitat):
         else:
             animal.consecutive_hot_months = 0
 
-    (hot_animals, alive_animals) = split_animals_by_consecutive_hot_months(
+    (hot_animals, alive_animals) = separate_dead_from_alive(
         alive_animals,
-        1,
+        lambda animal: animal.consecutive_hot_months > 1,
     )
 
-    (cold_animals, alive_animals) = split_animals_by_consecutive_cold_months(
+    (cold_animals, alive_animals) = separate_dead_from_alive(
         alive_animals,
-        1,
+        lambda animal: animal.consecutive_cold_months > 1,
     )
 
     if cold_animals:
@@ -203,37 +203,15 @@ def advance(simulation_step, species, habitat):
     return next_step
 
 
-def split_animals_by_birth_month(animals, birth_month):
-    before = []
-    after = []
+def separate_dead_from_alive(animals, is_animal_dead):
+    dead = []
+    alive = []
     for animal in animals:
-        if animal.birth_month < birth_month:
-            before.append(animal)
+        if is_animal_dead(animal):
+            dead.append(animal)
         else:
-            after.append(animal)
-    return (before, after)
-
-
-def split_animals_by_last_feed_month(animals, month):
-    before = []
-    after = []
-    for animal in animals:
-        if animal.last_feed_month < month:
-            before.append(animal)
-        else:
-            after.append(animal)
-    return (before, after)
-
-
-def split_animals_by_last_drink_month(animals, month):
-    before = []
-    after = []
-    for animal in animals:
-        if animal.last_drink_month < month:
-            before.append(animal)
-        else:
-            after.append(animal)
-    return (before, after)
+            alive.append(animal)
+    return (dead, alive)
 
 
 def get_new_animals_from_breeding(count, month):
@@ -246,28 +224,6 @@ def get_new_animals_from_breeding(count, month):
         born_animal.gender = gender
 
         yield born_animal
-
-
-def split_animals_by_consecutive_hot_months(animals, month):
-    before = []
-    after = []
-    for animal in animals:
-        if animal.consecutive_hot_months > month:
-            before.append(animal)
-        else:
-            after.append(animal)
-    return (before, after)
-
-
-def split_animals_by_consecutive_cold_months(animals, month):
-    before = []
-    after = []
-    for animal in animals:
-        if animal.consecutive_cold_months > month:
-            before.append(animal)
-        else:
-            after.append(animal)
-    return (before, after)
 
 
 def get_new_animal_gender():

@@ -16,7 +16,7 @@ from models import (
     SEASON_WINTER,
 )
 from unittest import TestCase
-from main import get_new_animals_from_breeding, advance, split_animals_by_birth_month
+from main import get_new_animals_from_breeding, advance, separate_dead_from_alive
 
 
 class BreedingTest(TestCase):
@@ -180,17 +180,20 @@ class AdvanceTest(TestCase):
         self.assertIn(DEATH_TOO_COLD, next_step.deaths)
 
 
-class SplitAnimalsByBirthMonthTest(TestCase):
-    def test_lower(self):
-        animal = Animal()
-        animal.birth_month = 0
-        animals = [animal]
+class SeparateDeadFromAliveTest(TestCase):
+    def test_dead(self):
+        animals = [Animal()]
 
-        month_cutoff = 1
-
-        (before, after) = split_animals_by_birth_month(animals, month_cutoff)
+        (before, after) = separate_dead_from_alive(animals, lambda x: True)
         self.assertEqual(1, len(before))
         self.assertEqual(0, len(after))
+
+    def test_alive(self):
+        animals = [Animal()]
+
+        (before, after) = separate_dead_from_alive(animals, lambda x: False)
+        self.assertEqual(0, len(before))
+        self.assertEqual(1, len(after))
 
 
 class SimulationStepTest(TestCase):
