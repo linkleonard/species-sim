@@ -1,5 +1,7 @@
 from math import floor
 
+MONTHS_IN_YEAR = 12
+
 GENDER_MALE = 'male'
 GENDER_FEMALE = 'female'
 GENDER_UNKNOWN = None
@@ -61,8 +63,9 @@ class AgeCheck(StepCheck):
     name = 'Age'
     death_type = DEATH_OLD_AGE
 
-    def __init__(self):
-        self.minimum_birth_month = 0
+    def __init__(self, simulation_step, species):
+        next_month = simulation_step.month + 1
+        self.minimum_birth_month = next_month - species.life_span * MONTHS_IN_YEAR
 
     def is_still_alive(self, animal):
         return animal.birth_month >= self.minimum_birth_month
@@ -71,10 +74,10 @@ class AgeCheck(StepCheck):
 class ResourceCheck(StepCheck):
     resource_field = ''
 
-    def __init__(self):
+    def __init__(self, simulation_step):
         self.resource = 0
         self.consumption = 0
-        self.simulation_month = 0
+        self.simulation_month = simulation_step.month + 1
         self.minimum_month = 0
 
     def update(self, animal):
@@ -91,11 +94,25 @@ class FoodCheck(ResourceCheck):
     death_type = DEATH_STARVATION
     resource_field = 'last_feed_month'
 
+    def __init__(self, simulation_step, habitat, species):
+        super().__init__(simulation_step)
+
+        self.resource = habitat.monthly_food
+        self.consumption = species.monthly_food_consumption
+        self.minimum_month = self.simulation_month - 3
+
 
 class DrinkCheck(ResourceCheck):
     name = 'Drink'
     death_type = DEATH_THIRST
     resource_field = 'last_drink_month'
+
+    def __init__(self, simulation_step, habitat, species):
+        super().__init__(simulation_step)
+
+        self.resource = habitat.monthly_water
+        self.consumption = species.monthly_water_consumption
+        self.minimum_month = self.simulation_month - 1
 
 
 class CounterCheck(StepCheck):
@@ -131,9 +148,9 @@ class HeatCheck(ConsecutiveConditionCheck):
     death_type = DEATH_TOO_HOT
     counter_field = 'consecutive_hot_months'
 
-    def __init__(self):
-        self.temperature = 0
-        self.maximum_temperature = 0
+    def __init__(self, temperature, species):
+        self.temperature = temperature
+        self.maximum_temperature = species.maximum_temperature
 
     def should_increment(self):
         return self.temperature > self.maximum_temperature
@@ -147,9 +164,9 @@ class ColdCheck(ConsecutiveConditionCheck):
     death_type = DEATH_TOO_COLD
     counter_field = 'consecutive_cold_months'
 
-    def __init__(self):
-        self.temperature = 0
-        self.minimum_temperature = 0
+    def __init__(self, temperature, species):
+        self.temperature = temperature
+        self.minimum_temperature = species.minimum_temperature
 
     def should_increment(self):
         return self.temperature < self.minimum_temperature

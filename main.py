@@ -10,6 +10,7 @@ from models import (
     DEATH_TOO_HOT,
     GENDER_MALE,
     GENDER_FEMALE,
+    MONTHS_IN_YEAR,
     SimulationStep,
     Animal,
     AgeCheck,
@@ -79,24 +80,11 @@ def advance(simulation_step, species, habitat):
     next_step.month = next_month
 
     # Copy over the existing animals
-    MONTHS_IN_YEAR = 12
-
     alive_animals = simulation_step.animals
 
-    age_check = AgeCheck()
-    age_check.minimum_birth_month = next_month - species.life_span * MONTHS_IN_YEAR
-
-    food_check = FoodCheck()
-    food_check.resource = habitat.monthly_food
-    food_check.consumption = species.monthly_food_consumption
-    food_check.simulation_month = simulation_step.month
-    food_check.minimum_month = next_month - 3
-
-    drink_check = DrinkCheck()
-    drink_check.resource = habitat.monthly_water
-    drink_check.consumption = species.monthly_water_consumption
-    drink_check.simulation_month = simulation_step.month
-    drink_check.minimum_month = next_month - 3
+    age_check = AgeCheck(simulation_step, species)
+    food_check = FoodCheck(simulation_step, habitat, species)
+    drink_check = DrinkCheck(simulation_step, habitat, species)
 
     # Normal distribution is probably a good fit for this.
     # A 0.5% chance corresponds to a standard deviation of ~2.81.
@@ -112,13 +100,8 @@ def advance(simulation_step, species, habitat):
         fluctuation,
     )
 
-    heat_check = HeatCheck()
-    heat_check.temperature = temperature
-    heat_check.maximum_temperature = species.maximum_temperature
-
-    cold_check = ColdCheck()
-    cold_check.temperature = temperature
-    cold_check.minimum_temperature = species.minimum_temperature
+    heat_check = HeatCheck(temperature, species)
+    cold_check = ColdCheck(temperature, species)
 
     checks = [age_check, food_check, drink_check, cold_check, heat_check]
 
