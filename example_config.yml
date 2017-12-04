@@ -1,10 +1,10 @@
 years: 100
 species:
-  - name: kangaroo 
+  - name: kangaroo
     attributes:
       monthly_food_consumption: 3 #arbitrary unit
       monthly_water_consumption: 4 #arbitrary unit
-      life_span: 30 #years 
+      life_span: 30 #years
       minimum_temperature: 30 #F
       maximum_temperature: 110 #F
   - name: bear

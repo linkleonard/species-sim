@@ -199,7 +199,7 @@ def main():
             for config in configuration['habitats']
         )
 
-        simulation_years = 100
+        simulation_years = configuration['years']
         print(
             'Simulation ran for {count:d} years'.format(
                 count=simulation_years,
