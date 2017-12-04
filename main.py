@@ -77,7 +77,11 @@ def advance(simulation_step, species, habitat):
             animal.last_feed_month = simulation_step.month
             fed_animals += 1
 
-    logger.debug('Fed %d animals (%d each)', fed_animals, species.monthly_food_consumption)
+    logger.debug(
+        'Fed %d animals (%d each)',
+        fed_animals,
+        species.monthly_food_consumption,
+    )
 
     alive_cutoff_feed_month = next_month - 3
     (starved_animals, alive_animals) = split_animals_by_last_feed_month(
@@ -107,6 +111,8 @@ def advance(simulation_step, species, habitat):
     )
     logger.debug('Animals born: %d', len(born_animals))
     next_step.animals += born_animals
+
+    logger.debug('Population currently at: %d', len(next_step.animals))
 
     return next_step
 
