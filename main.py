@@ -10,7 +10,7 @@ from models import (
     Animal,
 )
 from random import random
-from conf_parser import species_from_config
+from conf_parser import habitat_from_config, species_from_config
 
 male_ratio = 0.5
 
@@ -146,7 +146,10 @@ def main():
         species_from_config(config)
         for config in configuration['species']
     )
-    habitats = configuration['habitats']
+    habitats = tuple(
+        habitat_from_config(config)
+        for config in configuration['habitats']
+    )
 
     simulation_years = 100
     for species in species_list:
