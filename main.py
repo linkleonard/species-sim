@@ -23,8 +23,8 @@ def get_initial_simulation_step():
     female.gender = GENDER_FEMALE
 
     simulation_step = SimulationStep()
-    simulation_step.males.append(male)
-    simulation_step.females.append(female)
+    simulation_step.animals.append(male)
+    simulation_step.animals.append(female)
     return simulation_step
 
 
@@ -41,52 +41,38 @@ def simulate_species_in_habitat(species, habitat, simulation_years):
 def advance(simulation_step, species, habitat, month):
     next_step = SimulationStep()
     # Copy over the existing animals
-    next_step.males = simulation_step.males[:]
-    next_step.females = simulation_step.females[:]
-
     MONTHS_IN_YEAR = 12
 
-    alive_males = next_step.males
-    alive_females = next_step.females
+    alive_animals = simulation_step.animals
 
     alive_cutoff_birth_month = month - species.life_span * MONTHS_IN_YEAR
-    (dead_age_males, alive_males) = split_animals_by_birth_month(
-        alive_males,
+    (dead_age_animals, alive_animals) = split_animals_by_birth_month(
+        alive_animals,
         alive_cutoff_birth_month,
     )
 
-    (dead_age_females, alive_females) = split_animals_by_birth_month(
-        alive_females,
-        alive_cutoff_birth_month,
-    )
-
-    dead_age_animals = dead_age_males + dead_age_females
     if dead_age_animals:
         next_step.deaths[DEATH_OLD_AGE] = dead_age_animals
 
     alive_cutoff_feed_month = month - 3
-    (starved_males, alive_males) = split_animals_by_last_feed_month(
-        alive_males,
+    (starved_animals, alive_animals) = split_animals_by_last_feed_month(
+        alive_animals,
         alive_cutoff_feed_month,
     )
 
-    (starved_females, alive_females) = split_animals_by_last_feed_month(
-        alive_females,
-        alive_cutoff_feed_month,
-    )
-
-    next_step.males = alive_males
-    next_step.females = alive_females
-
-    starved_animals = starved_males + starved_females
     if starved_animals:
         next_step.deaths[DEATH_STARVATION] = starved_animals
 
+    next_step.animals = alive_animals
+
     # TODO: Probably should add a test condition, to not spawn if there are
     # no males
-    new_animals = get_new_animals_from_breeding(len(next_step.females), month)
-    next_step.males += new_animals[GENDER_MALE]
-    next_step.females += new_animals[GENDER_FEMALE]
+    females = tuple(
+        animal
+        for animal in next_step.animals
+        if animal.gender == GENDER_FEMALE
+    )
+    next_step.animals += get_new_animals_from_breeding(len(females), month)
 
     return next_step
 
@@ -113,11 +99,7 @@ def split_animals_by_last_feed_month(animals, month):
     return (before, after)
 
 
-
 def get_new_animals_from_breeding(count, month):
-    new_females = []
-    new_males = []
-
     for female in range(count):
         gender = get_new_animal_gender()
 
@@ -125,15 +107,7 @@ def get_new_animals_from_breeding(count, month):
         born_animal.birth_month = month
         born_animal.gender = gender
 
-        if gender == GENDER_FEMALE:
-            new_females.append(born_animal)
-        else:
-            new_males.append(born_animal)
-
-    return {
-        GENDER_MALE: new_males,
-        GENDER_FEMALE: new_females,
-    }
+        yield born_animal
 
 
 def get_new_animal_gender():

@@ -17,9 +17,7 @@ class Animal(object):
 
 class SimulationStep(object):
     def __init__(self):
-        self.males = []
-        self.females = []
-
+        self.animals = []
         self.deaths = {}
 
 
