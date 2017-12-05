@@ -22,7 +22,7 @@ from models import (
 import sys
 from random import random
 from conf_parser import habitat_from_config, species_from_config
-from random import random
+
 
 male_ratio = 0.5
 
