@@ -27,7 +27,7 @@ from conf_parser import habitat_from_config, species_from_config
 male_ratio = 0.5
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARN)
 logger.addHandler(logging.StreamHandler())
 
 log_path = os.path.join(
