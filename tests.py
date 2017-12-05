@@ -5,6 +5,7 @@ from models import (
     DEATH_TOO_HOT,
     DEATH_TOO_COLD,
     GENDER_FEMALE,
+    MONTHS_IN_YEAR,
     Animal,
     Habitat,
     SimulationStep,
@@ -20,6 +21,7 @@ from main import (
     advance,
     separate_alive_from_dead,
     breed_animals,
+    can_breed,
 )
 
 
@@ -34,6 +36,30 @@ class GetNewAnimalsFromBreedingTest(TestCase):
 
     # TODO: Test that animals are placed in the right list, depending on
     # generated gender
+
+
+class CanBreedTest(TestCase):
+    def test_too_young(self):
+        animal = Animal()
+
+        species = Species()
+        species.minimum_breeding_age = 1
+
+        simulation_step = SimulationStep()
+        simulation_step.month = 0
+
+        self.assertFalse(can_breed(animal, species, simulation_step))
+
+    def test(self):
+        animal = Animal()
+
+        species = Species()
+        species.minimum_breeding_age = 1
+
+        simulation_step = SimulationStep()
+        simulation_step.month = MONTHS_IN_YEAR
+
+        self.assertTrue(can_breed(animal, species, simulation_step))
 
 
 class BreedAnimalsTest(TestCase):

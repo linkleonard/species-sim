@@ -10,6 +10,7 @@ from models import (
     DEATH_TOO_HOT,
     GENDER_MALE,
     GENDER_FEMALE,
+    MONTHS_IN_YEAR,
     SimulationStep,
     Animal,
     AgeCheck,
@@ -145,11 +146,12 @@ def advance(simulation_step, species, habitat):
 def breed_animals(animals, species, simulation_step):
     new_animal_count = 0
     for animal in animals:
-        if animal.gestation_months == species.gestation_months:
-            new_animal_count += 1
-            animal.gestation_months = 0
-        else:
-            animal.gestation_months += 1
+        if can_breed(animal, species, simulation_step):
+            if animal.gestation_months == species.gestation_months:
+                new_animal_count += 1
+                animal.gestation_months = 0
+            else:
+                animal.gestation_months += 1
 
     return get_new_animals_from_breeding(
         new_animal_count,
@@ -183,6 +185,11 @@ def get_new_animals_from_breeding(count, month):
 def get_fluctuation():
     scale = 10 if random() < 0.95 else 30
     return (random() - 0.5) * scale
+
+
+def can_breed(animal, species, simulation_step):
+    month_age = species.minimum_breeding_age * MONTHS_IN_YEAR
+    return simulation_step.month - animal.birth_month >= month_age
 
 
 def get_new_animal_gender():

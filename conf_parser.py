@@ -19,6 +19,7 @@ def species_from_config(config):
     species.minimum_temperature = attributes['minimum_temperature']
     species.maximum_temperature = attributes['maximum_temperature']
     species.gestation_months = attributes['gestation_period']
+    species.minimum_breeding_age = attributes['minimum_breeding_age']
 
     return species
 

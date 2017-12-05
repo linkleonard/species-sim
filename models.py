@@ -190,6 +190,7 @@ class Species(object):
         self.minimum_temperature = 0
         self.maximum_temperature = 0
         self.gestation_months = 0
+        self.minimum_breeding_age = 0  # years
 
 
 class Habitat(object):
